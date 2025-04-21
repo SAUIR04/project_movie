@@ -3,24 +3,10 @@ import jwt from "jsonwebtoken";
 import User from "../models/users.js";
 import RevokedToken from "../models/token.js";
 import { authenticateToken, adminOnly } from "../middleware/auth.js";
-import path from "path";
-import { fileURLToPath } from "url";
+import dotenv from "dotenv";
+dotenv.config();
 
 const router = express.Router();
-
-// Get the current directory
-const __filename = fileURLToPath(import.meta.url);
-const __dirname = path.dirname(__filename);
-
-// Маршрут для логина
-router.get("/login", (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/login.html'));
-});
-
-// Маршрут для страницы Index (Требуется аутентификация)
-router.get("/index", authenticateToken, adminOnly, (req, res) => {
-    res.sendFile(path.join(__dirname, '../frontend/index.html'));
-});
 
 
 
