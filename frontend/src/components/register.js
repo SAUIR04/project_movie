@@ -13,8 +13,8 @@ const Register = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); // Enable loading indicator
-
+        setLoading(true);
+    
         try {
             const response = await fetch(`${API_BASE_URL}/register`, {
                 method: 'POST',
@@ -23,24 +23,25 @@ const Register = () => {
                 },
                 body: JSON.stringify({ username, password }),
             });
-
+    
             const data = await response.json();
-
-            if (data.success) {
-                setMessage(data.message);
+    
+            if (response.ok) {  // Проверка успешного ответа
+                setMessage(data.message || 'Registration successful');
                 setMessageType('success');
-                navigate('/login'); // Redirect to the login page
+                navigate('/login');
             } else {
-                setMessage(data.message);
+                setMessage(data.message || 'Registration failed');
                 setMessageType('error');
             }
         } catch (error) {
             setMessage('Registration failed. Please try again.');
             setMessageType('error');
         } finally {
-            setLoading(false); // Disable loading indicator
+            setLoading(false);
         }
     };
+    
 
     return (
         <div className="register-container">

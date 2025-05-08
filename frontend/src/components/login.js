@@ -15,8 +15,8 @@ const Login = () => {
 
     const handleSubmit = async (e) => {
         e.preventDefault();
-        setLoading(true); // Enable loading indicator
-
+        setLoading(true);
+    
         try {
             const response = await fetch(`${API_BASE_URL}/login`, {
                 method: 'POST',
@@ -25,24 +25,24 @@ const Login = () => {
                 },
                 body: JSON.stringify({ username, password }),
             });
-
+    
             const data = await response.json();
-
-            if (data.success) {
+    
+            if (response.ok) {  // Проверка успешного ответа
                 login(data.token, username);
                 navigate('/tovars');
             } else {
-                setMessage(data.message);
+                setMessage(data.message || 'Login failed');
                 setMessageType('error');
             }
         } catch (error) {
             setMessage('Login failed. Please try again.');
             setMessageType('error');
         } finally {
-            setLoading(false); // Disable loading indicator
+            setLoading(false);
         }
     };
-
+    
     return (
         <div className="login-container">
             <h1>Login</h1>
