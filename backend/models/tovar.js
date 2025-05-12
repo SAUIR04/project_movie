@@ -9,5 +9,5 @@ const tovarSchema = new mongoose.Schema({
     releaseDate: { type: Date, required: true },
     rating: { type: Number, default: 0 },
   });
-const Tovar = mongoose.model('Tovar', tovarSchema); // Исправлено: имя модели с заглавной буквы
+const Tovar = mongoose.model('Tovar', tovarSchema); 
 export default Tovar;
