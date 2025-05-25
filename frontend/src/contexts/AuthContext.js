@@ -1,76 +1,126 @@
-import React, { createContext, useState, useEffect } from 'react';
-import { jwtDecode } from 'jwt-decode';
+"use client"
 
-export const AuthContext = createContext();
+import { createContext, useState, useEffect } from "react"
+
+export const AuthContext = createContext()
 
 export const AuthProvider = ({ children }) => {
-    const [token, setToken] = useState(localStorage.getItem('token'));
-    const [username, setUsername] = useState(localStorage.getItem('username'));
-    const [isAuthenticated, setIsAuthenticated] = useState(false);
-    const [loading, setLoading] = useState(true);
+  const [token, setToken] = useState(localStorage.getItem("token") || null)
+  const [user, setUser] = useState(null)
+  const [loading, setLoading] = useState(true)
+  const [isAuthenticated, setIsAuthenticated] = useState(false)
 
-    useEffect(() => {
-        const checkAuth = async () => {
-            try {
-                if (token) {
-                    
-                    const decoded = jwtDecode(token);
-                    if (decoded.exp * 1000 < Date.now()) {
-                        // Token expired
-                        localStorage.removeItem('token');
-                        localStorage.removeItem('username');
-                        setToken(null);
-                        setUsername('');
-                        setIsAuthenticated(false);
-                    } else {
-                        setIsAuthenticated(true);
-                        setUsername((prevUsername) => decoded.username || prevUsername);
-                    }
-                } else {
-                    setIsAuthenticated(false);
-                }
-                setLoading(false);
-            } catch (error) {
-                localStorage.removeItem('token');
-                localStorage.removeItem('username');
-                setToken(null);
-                setUsername('');
-                setIsAuthenticated(false);
-                setLoading(false);
-            }
-        };
+  // Инициализация состояния аутентификации при загрузке
+  useEffect(() => {
+    const initAuth = () => {
+      // Проверяем наличие токена
+      const storedToken = localStorage.getItem("token")
 
-        checkAuth();
-    }, [token]);
+      if (storedToken) {
+        setToken(storedToken)
+        setIsAuthenticated(true)
 
-    const login = (newToken, newUsername) => {
-        localStorage.setItem('token', newToken);
-        localStorage.setItem('username', newUsername);
-        setToken(newToken);
-        setUsername(newUsername);
-        setIsAuthenticated(true);
-    };
+        // Получаем данные пользователя из localStorage
+        const username = localStorage.getItem("username") || "Пользователь"
+        const userId = localStorage.getItem("userId") || "unknown"
+        const userRole = localStorage.getItem("userRole") || "user"
 
-    const logout = () => {
-        localStorage.removeItem('token');
-        localStorage.removeItem('username');
-        setToken(null);
-        setUsername('');
-        setIsAuthenticated(false);
-    };
+        // Создаем объект пользователя
+        setUser({
+          userId,
+          username,
+          role: userRole,
+        })
 
-    return (
-        <AuthContext.Provider
-            value={{
-                token,
-                username,
-                isAuthenticated,
-                loading,
-                login,
-                logout,
-            }}
-        >
-            {children}
-        </AuthContext.Provider>
-    );
-};
+        console.log("Аутентификация восстановлена из localStorage:", {
+          username,
+          role: userRole,
+        })
+      } else {
+        // Сбрасываем состояние, если токен отсутствует
+        setToken(null)
+        setUser(null)
+        setIsAuthenticated(false)
+      }
+
+      setLoading(false)
+    }
+
+    initAuth()
+  }, [])
+
+  // Функция входа
+  const login = async (authToken, username, userData = null) => {
+    try {
+      console.log("Вход в систему:", { username, userData })
+
+      let userRole = "user"
+      let userId = Math.random().toString(36).substring(2, 9)
+
+      // Если переданы данные пользователя от сервера, используем их
+      if (userData) {
+        userRole = userData.role || "user"
+        userId = userData.id || userId
+        username = userData.username || username
+      } else {
+        // Определяем роль пользователя (для демо)
+        const isAdmin = username.toLowerCase() === "admin"
+        userRole = isAdmin ? "admin" : "user"
+      }
+
+      // Сохраняем данные в localStorage
+      localStorage.setItem("token", authToken)
+      localStorage.setItem("username", username)
+      localStorage.setItem("userId", userId)
+      localStorage.setItem("userRole", userRole)
+
+      // Обновляем состояние
+      setToken(authToken)
+      setUser({
+        userId,
+        username,
+        role: userRole,
+      })
+      setIsAuthenticated(true)
+
+      console.log("Успешный вход:", { username, role: userRole })
+      return true
+    } catch (error) {
+      console.error("Ошибка входа:", error)
+      return false
+    }
+  }
+
+  const logout = () => {
+    // Удаляем данные из localStorage
+    localStorage.removeItem("token")
+    localStorage.removeItem("username")
+    localStorage.removeItem("userId")
+    localStorage.removeItem("userRole")
+
+    // Сбрасываем состояние
+    setToken(null)
+    setUser(null)
+    setIsAuthenticated(false)
+
+    console.log("Выход из системы выполнен")
+  }
+
+  // Отладочная информация
+  console.log("AuthContext state:", { isAuthenticated, user, token: token ? "present" : "absent" })
+
+  return (
+    <AuthContext.Provider
+      value={{
+        token,
+        user,
+        isAuthenticated,
+        loading,
+        login,
+        logout,
+      }}
+    >
+      {children}
+    </AuthContext.Provider>
+  )
+}
